@@ -26,6 +26,12 @@ import os
 import subprocess
 import sys
 
+# ★ 导入即把 stdout/stderr 切到 UTF-8。
+#   必须写在模块级而非 __main__ 分支：测试会 import 本模块后直接调 selftest()，
+#   那时不走 __main__，而 Windows runner 的默认编码是 cp1252，中文 print 会抛
+#   UnicodeEncodeError: 'charmap' codec can't encode characters（CI 实测）。
+import _utf8  # noqa: E402,F401
+
 __all__ = ["is_reference_path", "check_files_whitelist", "check_packed"]
 
 

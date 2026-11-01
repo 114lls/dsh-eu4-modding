@@ -22,7 +22,18 @@ import ast
 import io
 import os
 import re
+import sys
 import unittest
+
+# ★ Windows runner 的 stdout 默认是 cp1252，而本文件 L106 有中文 print（skip 统计）。
+#   CI 实测（windows-latest / py3.10）抛 UnicodeEncodeError: 'charmap' codec。
+#   必须在**模块导入时**就切 UTF-8 —— 只写在 __main__ 分支里不管用，
+#   因为 unittest 是 import 本模块后发现用例，不走 __main__。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
@@ -38,7 +49,8 @@ def _py_files() -> list[str]:
 
 def _skip_calls(path: str) -> list[tuple[int, str]]:
     """返回 [(行号, 首个参数字符串)]，只抓 unittest.SkipTest("...") 字面量调用。"""
-    src = io.open(path, encoding="utf-8").read()
+    with io.open(path, encoding="utf-8") as fh:
+        src = fh.read()
     tree = ast.parse(src)
     out: list[tuple[int, str]] = []
     for node in ast.walk(tree):
