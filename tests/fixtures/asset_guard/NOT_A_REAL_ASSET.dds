@@ -1,0 +1,15 @@
+# 故意放的「违规样本」——用于验证 CI 的「不含游戏素材」检查确实会失败。
+
+这个文件是**空文本**，扩展名是 .dds，内容不是任何真实的 DDS。
+它的唯一作用：让 `tools/check_no_assets.py` 在扫到它时必须报错退出。
+
+验证方式（CI 里的 `verify-guard-works` 步骤就是这么做的）：
+
+    1. 把本文件临时改名为 *.png（或任何素材扩展名）
+    2. 跑 tools/check_no_assets.py，**期望非 0 退出**
+    3. 跑通了才说明「守卫」不是空断言
+
+若哪天有人「顺手」把它删了，第 2 步就会变成 0 退出，
+CI 会因此失败并提示「守卫失效」——这正是我们要的效果。
+
+DO NOT DELETE without updating tools/check_no_assets.py and ci.yml.
