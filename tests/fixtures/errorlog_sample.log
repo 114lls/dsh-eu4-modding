@@ -1,0 +1,21 @@
+[dlc.cpp:254]: Invalid supported_version in  file: mod/ugc_3232659721.mod line: 6
+[virtualfilesystem.cpp:255]: Failed to find pre specified enumerate for 'localisation/replace'(.yml, (null), -1)
+[localize.cpp:671]: Localization hash collision found, more info in text.log! Language: l_english
+[eventmanager.cpp:434]: Incorrect namespace event id: zz_epi_chain1.
+[persistent.cpp:88]: Parsing Error. File: "events/zz_epi_chain_1.txt", Error: Unknown effect type. Key: treasury
+[eventmanager.cpp:166]: Event #41 (personal_byz_rd.41) is missing a title in events/personal_byz_rom
+[eventmanager.cpp:169]: Event #41 (personal_byz_rd.41) is missing a desc in events/personal_byz_rom
+[eventmanager.cpp:172]: Event #41 (personal_byz_rd.41) has no options in events/personal_byz_rom
+[eventmanager.cpp:175]: Event #41 (personal_byz_rd.41) is missing picture in events/personal_byz_rom
+[effectimplementation.cpp:26715]: Script error! Script Object Token: "complete_mission", Error: Unknown effect type
+[triggerimplementation.cpp:1376]: Script error! Script Object Token: "inflation", Error: Trigger conditions invalid
+[triggerimplementation.cpp:21610]: Unknown country 'RNX' in tag trigger
+[triggerimplementation.cpp:35920]: Subject type not found in DB: xuanweisi
+[gamestate.cpp:7653]: Undefined event target: personal_byz_hre_probe_roman
+[map.cpp:2483]: Province 12 has no pixels in provinces.bmp
+[map.cpp:86]: Missing province adjective! ID: 12, expected loc key: PROV_ADJ12, name: xxx
+[map.cpp:1611]: PROV12 hasn't been assigned to an area!
+[colonialregion.cpp:63]: Adding province double 12 to colonial region colonial_newmexico
+[dlc.cpp:254]: Invalid supported_version in  file: mod/posthumous_names.mod line: 6
+[persistent.cpp:88]: Parsing Error. File: "events/zz_epi_chain_2.txt", Error: Unknown effect type. Key: effect
+[eventmanager.cpp:434]: Incorrect namespace event id: zz_epi_test1.

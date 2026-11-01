@@ -1,0 +1,4 @@
+﻿l_english:
+ zz_mission_test.1.t:0 "任务测试"
+ zz_mission_test.1.d:0 "验证 complete_mission 的定义 vs 引用检查。"
+ zz_mission_test.1.a:0 "确认"

@@ -1,0 +1,26 @@
+namespace = zz_clean
+
+# 干净样本：所有写法都合规，lint 必须 0 error（防误报基准）。
+# 本文件不含任何游戏素材。
+
+country_event = {
+	id = zz_clean.1
+	title = "zz_clean.1.t"
+	desc = "zz_clean.1.d"
+	is_triggered_only = yes
+
+	trigger = {
+		treasury = 100
+		num_of_cities = 3
+	}
+
+	immediate = {
+		add_prestige = 5
+		set_country_flag = zz_clean_done
+	}
+
+	option = {
+		name = "zz_clean.1.a"
+		add_years_of_income = 0.5
+	}
+}

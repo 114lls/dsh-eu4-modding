@@ -1,0 +1,10 @@
+# L4-c 样本：同一个 on_action 钩子被定义两次 → warn
+# 本文件不含任何游戏素材。
+
+on_startup = {
+	set_country_flag = zz_dup_first
+}
+
+on_startup = {
+	set_country_flag = zz_dup_second
+}

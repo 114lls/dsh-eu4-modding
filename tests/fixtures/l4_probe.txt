@@ -1,0 +1,47 @@
+namespace = zz_epi_grain
+
+# L4 反跑样本：故意写错的四类问题 + 一个「语料有、cwt 无」的合法名
+# 本文件不含任何游戏素材，全部自造。
+
+country_event = {
+	id = zz_epi_grain.1
+	title = "t"
+	desc = "d"
+	is_triggered_only = yes
+
+	trigger = {
+		treasury = 500
+	}
+
+	immediate = {
+		# ① 效果位写了触发器名 treasury  → error（wrong-position）
+		treasury = -50
+	}
+
+	option = {
+		name = "zz_epi_grain.1.a"
+		# ② 选项内套 effect = { }  → error（effect-in-option）
+		effect = {
+			add_prestige = 1
+		}
+	}
+}
+
+country_event = {
+	id = zz_epi_grain.2
+	title = "t2"
+	desc = "d2"
+	# ③ 缺 is_triggered_only  → warn（no-mtth-no-triggered-only）
+	option = {
+		name = "zz_epi_grain.2.a"
+		add_prestige = 2
+
+		# ④ 语料有、cwt 无的合法名，且放在【合法的触发器位】
+		#    → 必须 warn（corpus_only），绝不能 error
+		trigger = {
+			native_sponsor_scope = {
+				exists = yes
+			}
+		}
+	}
+}

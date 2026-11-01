@@ -1,0 +1,12 @@
+namespace = zz_epi_grain
+
+# 括号故意不平衡：country_event 少了结尾 }
+country_event = {
+	id = zz_epi_grain.1
+	title = "t"
+	desc = "d"
+	is_triggered_only = yes
+	option = {
+		name = "a"
+		add_prestige = 1
+	}

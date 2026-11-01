@@ -1,0 +1,76 @@
+# 任务树 fixture：多节点环（A→B→A）与三节点环（A→B→C→A）
+# 本文件不含任何游戏素材。
+
+zz_cycle_missions = {
+	slot = 1
+
+	# ① 两节点环：zz_cyc_a → zz_cyc_b → zz_cyc_a
+	zz_cyc_a = {
+		icon = mission_generic
+		required_missions = { zz_cyc_b }
+		trigger = { always = yes }
+		effect = { add_prestige = 1 }
+	}
+
+	zz_cyc_b = {
+		icon = mission_generic
+		required_missions = { zz_cyc_a }
+		trigger = { always = yes }
+		effect = { add_prestige = 1 }
+	}
+}
+
+zz_cycle3_missions = {
+	slot = 2
+
+	# ② 三节点环：x → y → z → x
+	zz_cyc_x = {
+		icon = mission_generic
+		required_missions = { zz_cyc_y }
+		trigger = { always = yes }
+		effect = { add_prestige = 1 }
+	}
+
+	zz_cyc_y = {
+		icon = mission_generic
+		required_missions = { zz_cyc_z }
+		trigger = { always = yes }
+		effect = { add_prestige = 1 }
+	}
+
+	zz_cyc_z = {
+		icon = mission_generic
+		required_missions = { zz_cyc_x }
+		trigger = { always = yes }
+		effect = { add_prestige = 1 }
+	}
+
+	# ③ 正常链（不应报）：ok1 → ok2 → ok3，无环
+	zz_ok_1 = {
+		icon = mission_generic
+		trigger = { always = yes }
+		effect = { add_prestige = 1 }
+	}
+
+	zz_ok_2 = {
+		icon = mission_generic
+		required_missions = { zz_ok_1 }
+		trigger = { always = yes }
+		effect = { add_prestige = 1 }
+	}
+
+	zz_ok_3 = {
+		icon = mission_generic
+		required_missions = { zz_ok_2 }
+		trigger = { always = yes }
+		effect = { add_prestige = 1 }
+	}
+
+	# ④ 引用了外部（vanilla）任务 —— 不应被算进环
+	zz_ext_ref = {
+		icon = mission_generic
+		required_missions = { conquer_scotland }
+		trigger = { always = yes }
+		effect = { add_prestige = 1 }
+	}
+}

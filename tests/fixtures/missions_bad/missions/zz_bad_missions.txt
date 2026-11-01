@@ -1,0 +1,31 @@
+# 任务树 fixture：自环 + 重复定义（两种都要 warn）
+# 本文件不含任何游戏素材。
+
+zz_bad_missions = {
+	slot = 2
+
+	# ① 自环：required_missions 引用自身 → warn
+	zz_mission_selfloop = {
+		icon = mission_generic
+		required_missions = { zz_mission_selfloop }
+		trigger = { always = yes }
+		effect = { add_prestige = 1 }
+	}
+
+	# ② 重复定义：这个名字会在下方再定义一次 → warn（后者覆盖前者）
+	zz_mission_dup = {
+		icon = mission_generic
+		trigger = { always = yes }
+		effect = { add_prestige = 10 }
+	}
+}
+
+zz_bad_missions_2 = {
+	slot = 3
+
+	zz_mission_dup = {
+		icon = mission_generic
+		trigger = { always = yes }
+		effect = { add_prestige = 20 }
+	}
+}

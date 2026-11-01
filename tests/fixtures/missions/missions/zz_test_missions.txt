@@ -1,0 +1,31 @@
+# 任务树 fixture —— 验证「定义 vs 引用」检查
+# 本文件不含任何游戏素材。
+
+zz_test_missions = {
+	slot = 1
+	generic = yes
+
+	# ① 正常任务：有定义、被 complete_mission 引用
+	zz_mission_ok = {
+		icon = mission_generic
+		trigger = {
+			army_size = 5
+		}
+		effect = {
+			add_prestige = 5
+			set_country_flag = zz_step1
+		}
+	}
+
+	# ② 前置依赖正常的第二个任务
+	zz_mission_second = {
+		icon = mission_generic
+		required_missions = { zz_mission_ok }
+		trigger = {
+			has_country_flag = zz_step1
+		}
+		effect = {
+			add_prestige = 5
+		}
+	}
+}

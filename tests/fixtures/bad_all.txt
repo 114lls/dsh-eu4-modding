@@ -1,0 +1,27 @@
+# 故意写错的 fixture —— 用于验证 eu4_lint 抓得到真错（L4 反跑）
+# 本文件不含任何游戏素材，全部自造。
+
+namespace = zz_epi_chain1
+
+country_event = {
+	id = zz_epi_chain1.1
+	title = "t"
+	desc = "d"
+	is_triggered_only = yes
+	option = {
+		name = "a"
+		effect = {
+			prestige = 1
+		}
+	}
+}
+
+country_event = {
+	id = zz_epi_chain1.2
+	title = "t2"
+	desc = "d2"
+	option = {
+		name = "b"
+		treasury = -50
+	}
+}
