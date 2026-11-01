@@ -1,0 +1,76 @@
+{
+  "name": "dsh-eu4-modding",
+  "version": "0.1.0",
+  "description": "EU4 1.37.5.0 modding skill bundle for DeepSeek Harness: create, edit, validate, install and debug Europa Universalis IV mods (events, decisions, missions, ideas, government reforms, map, modifiers, on_actions, localisation) with bundled static-verification and error.log triage tools.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/preset.js",
+    "presets/eu4-modding/preset.yml",
+    "presets/eu4-modding/agent.cordis.yml",
+    "cordis.patch.yml",
+    "skills/eu4-modding/SKILL.md",
+    "skills/eu4-modding/INSTALL.md",
+    "skills/eu4-modding/references/*.md",
+    "skills/eu4-modding/scripts/*.py",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE",
+    "icon.svg",
+    "CHANGELOG.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-skill": ">=0.1.0-rc.1 <0.3.0-0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-skill": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.0 <0.3.0"
+  },
+  "scripts": {
+    "test": "node --test tests/smoke.test.mjs"
+  },
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "skill",
+    "europa-universalis",
+    "eu4",
+    "eu4-modding",
+    "paradox",
+    "modding",
+    "static-analysis",
+    "errorlog"
+  ],
+  "icon": "./icon.svg",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/114lls/dsh-eu4-modding.git"
+  },
+  "homepage": "https://github.com/114lls/dsh-eu4-modding#readme",
+  "bugs": {
+    "url": "https://github.com/114lls/dsh-eu4-modding/issues"
+  }
+}

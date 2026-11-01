@@ -1,0 +1,3 @@
+name: EU4 mod mode
+description: 《欧陆风云4》(EU4) 模组开发模式——面向 1.37.5.0 的脚本编写、静态校验、error.log 分诊与安装启用。内置 eu4-modding 技能（8 类 lint / 三源白名单 / 快照哈希 / 备份回滚），默认开启批处理与 PowerShell，适合改脚本、验模组、查静默失效。
+order: 11

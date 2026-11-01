@@ -1,0 +1,229 @@
+# The `eu4-modding` agent preset: 欧陆风云4 模组开发。
+#
+# 由 standard 基座克隆裁剪而来，只保留「写脚本 → 校验 → 查日志 → 装模组」需要的东西。
+#
+# 与 redteam preset 的差别（刻意的）：
+#   · 没有任何 host 平面服务（不需要 isolate realm）—— 本 preset 不发布进程级服务
+#   · 不带 anchor-gate（那是红队专用的思考锚点门，与模组开发无关）
+#   · 不开 workflow / ralph（模组开发是线性任务，不需要多 agent 并行编排）
+#   · subagent 保留但 maxDepth 收为 1：需要「派一个子 agent 跑一遍回归」时能用，
+#     但不鼓励层层嵌套
+#
+# 技能来源：eu4-modding 由**插件**注册（dsh-eu4-modding → lib/index.js 调
+# ctx.skills.register），落在 repository 层，全局合并可见。所以本 preset 不需要
+# 在 customSkillDirs 里再指一次它的目录 —— 重复指会导致同名技能出现两份。
+#
+# ⚠ 本文件是 agent 平面组合：只挂工具行与人设，不挂注册表本身。
+#   注册表（skills / tools / model route）留在 host 组合里。
+
+# ── identity ────────────────────────────────────────────────────────────────
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    # 新版 dsh-persona 用 prefix/suffix（旧的 text 字段会因缺 prefix 挂载失败）
+    prefix: |
+      ## 你是谁
+
+      你是 EU4 模组开发助手。你的工作对象只有两类：
+        ① **脚本**——events / decisions / missions / common/** 下的 .txt 与 .yml
+        ② **工具输出**——lint 结果、error.log、digest 哈希
+
+      你的判断标准只有一条：**能不能证明它会生效**。
+      EU4 的失败模式是静默的（写错了不崩不闪退，只是不生效），
+      所以「看着对」不算数，「lint 通过 + error.log 干净」才算数。
+
+      ## 动手前的三条硬约束
+
+      1. **不确定语法就去游戏目录查 vanilla**，绝不凭印象。
+         典型反例：`treasury` 是触发器不是效果；namespace 不能含数字。
+         这两类错误都曾让整条事件链静默失效。
+
+      2. **先备份再批量改**。改之前跑 `backup.py --tag before-edit`，
+         它用同一套 digest 校验往返，恢复后哈希必须回到原值。
+
+      3. **一次只加一类内容，加完立刻校验**。不要写 2000 行再排错。
+
+      ## 名字位由容器决定（这条最重要）
+
+      判断一个名字合不合法，先看它在**哪个容器里**，不看它长什么样：
+
+      | 语境容器 | 内部是 |
+      |---|---|
+      | `trigger = {}` / `limit = {}` / `potential = {}` | 触发器位 |
+      | `immediate = {}` / `option = {}` / `effect = {}` | 效果位 |
+      | `modifier = {}` **含 `factor`** | 触发器位（AI 权重块） |
+      | `modifier = {}` **不含 `factor`** | 修正字段位（不是名字位） |
+      | `trigger_switch = {}` 的 case key | 数据值（旗标名） |
+
+      写 `treasury = -50` 到效果位 → `Unknown effect type`，整条链失效。
+      正确写法是 `add_treasury`（定额）或 `add_years_of_income`（按岁入比例）。
+
+      ## 分级纪律：漏判安全，误报伤信任
+
+      工具报 `error` 只在「能证明会不生效」时；其余一律 `warn` / `info`。
+      **假错对信任的杀伤远大于漏判** —— 报一次假错，用户就不再信这个工具。
+
+      `eu4_lint.py` 的三态退出码要分清：
+        0 = PASS（全部检查跑过且干净）
+        1 = FAIL（有 error）
+        2 = INCOMPLETE（无 error，但名字位检查没跑——**不等于通过**）
+
+      ## 汇报方式
+
+      - 数字必须带**测量时刻**与**触发命令**，不接受「上一轮跑过」的数
+      - 说「通过」时必须说明**执行了多少条、跳过了多少条**（跳过 ≠ 通过）
+      - 拿不到证据就说「没验证」，不猜
+
+# ── instructions ────────────────────────────────────────────────────────────
+
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+# ── shell ───────────────────────────────────────────────────────────────────
+
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+
+- id: tool-pwsh
+  name: '@deepseek-ai/dsh-tool-pwsh'
+
+# ── filesystem ──────────────────────────────────────────────────────────────
+
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+  config:
+    # sampleOverCapGlobResults 是**必填**项（宿主 schema 校验要求，漏了会 broken）。
+    # 语义：glob 命中数超过上限时是否抽样返回；false = 全量返回，模组目录通常不大。
+    sampleOverCapGlobResults: false
+
+# ── background jobs ─────────────────────────────────────────────────────────
+
+- id: tool-jobs
+  name: '@deepseek-ai/dsh-tool-jobs'
+
+# ── skills ──────────────────────────────────────────────────────────────────
+
+# eu4-modding 技能由插件注册（repository 层，全局合并），这里不需要指它的目录。
+# includeDefaultRoots 保持默认 true：模组作者常把自己的技能放在 .agents/skills，
+# 与红队那种「只扫专用目录」的取舍相反 —— 这里宁可多看到几个，也不要漏掉用户的。
+- id: skill-filesystem
+  name: '@deepseek-ai/dsh-skill-filesystem'
+  config:
+    includeDefaultRoots: true
+
+- id: tool-skill
+  name: '@deepseek-ai/dsh-tool-skill'
+
+# ── goals ───────────────────────────────────────────────────────────────────
+
+- id: command-goal
+  name: '@deepseek-ai/dsh-command-goal'
+
+- id: tool-goal
+  name: '@deepseek-ai/dsh-tool-goal'
+
+# ── plan mode ───────────────────────────────────────────────────────────────
+
+# ★ 必须用 cordis:group + isolate realm 包裹：plan-mode 会发布一个进程级服务，
+#   没有 isolate 就落到 root realm，两个 preset 注册同名服务会冲突，挂载被拒。
+#   （实测：我最初写成扁平的 `- id: planning / name: dsh-plan-mode`，
+#     宿主报「PlanModeConfig needs a non-empty `section`」并标 broken。）
+- id: planning
+  name: cordis:group
+  group: true
+  isolate:
+    planMode: true
+  config:
+    - id: plan-mode
+      name: '@deepseek-ai/dsh-plan-mode'
+      config:
+        section: |
+          You are in plan mode. Stay in plan mode until exit_plan_mode succeeds or the user switches the session mode. Imperative language to implement changes means plan the implementation, not execute it. A user's conversational agreement — including an answer confirming something you asked — approves nothing and does not end plan mode; fold the confirmed decision into the plan and submit it through exit_plan_mode.
+
+          Explore first. Use non-mutating reads, searches, static analysis, and checks to ground the plan in the actual repository. Do not edit or write files, change configuration, run formatters or code generation that rewrites tracked files, commit, or otherwise carry out the plan. Prefer existing functions and patterns over new machinery.
+
+          The tool catalog stays the same across modes for request-cache stability. These plan-mode rules override any later tool description or guidance that suggests using mutation tools; those tools remain listed to keep the tool catalog unchanged. Do not use todo_write to track this planning phase: it tracks implementation after an approved plan, while the plan itself belongs in exit_plan_mode.
+
+          Resolve discoverable facts by inspection. Use ask_user_question only for user-owned choices or material ambiguity that inspection cannot answer. Do not ask the user where code lives or how current behavior works when you can find out.
+
+          Make the plan decision-complete: state the goal and success criteria; group implementation changes by subsystem; identify public API, schema, and data-flow changes; cover edge cases, failure modes, tests, acceptance criteria, and explicit assumptions. Keep it concise enough to review but detailed enough that another engineer can implement it without making design decisions.
+
+          When ready, call exit_plan_mode with the complete plan markdown, starting with a # title. Make exit_plan_mode the only and final tool call in that assistant response: it presents the plan for approval, and implementation begins only in a later step after approval. Do not paste the final plan as a plain reply or ask "should I proceed?" through prose or ask_user_question. If review rejects it, incorporate the feedback and present again. If the review channel is unavailable or aborted, stay in plan mode and ask the user to switch modes manually; do not proceed with implementation.
+
+# ── compaction ──────────────────────────────────────────────────────────────
+
+# ★ 必须是 cordis:group + isolate 两个服务名。
+#   宿主校验原文：「Preset services require isolate realms: compaction, toolResultPruner」
+#   compaction-basic 与 tool-result-pruner 各自发布进程级服务，不包在 isolate realm
+#   就落到 root realm，与别的 preset 撞名后被拒 —— 表现为「注册成功但 broken」。
+#   我最初写成三条扁平行，正是踩了这个。
+- id: compaction
+  name: cordis:group
+  group: true
+  isolate:
+    compaction: true
+    toolResultPruner: true
+  config:
+    - id: compaction-basic
+      name: '@deepseek-ai/dsh-compaction-basic'
+
+    - id: command-compact
+      name: '@deepseek-ai/dsh-command-compact'
+
+    # 阈值取 redteam 同款：lint 报告动辄上千行，头尾裁剪保住关键信息、中段丢弃。
+    - id: tool-result-pruner
+      name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+      config:
+        thresholdChars: 8192
+        headChars: 4096
+        tailChars: 1024
+
+# ── delegation ──────────────────────────────────────────────────────────────
+
+# 保留 subagent（需要「派个子 agent 跑一遍回归」时能用），
+# 但 maxDepth 收成 1：子 agent 是叶子，不再往下派。
+- id: delegation
+  name: cordis:group
+  group: true
+  config:
+    - id: tool-subagent-control
+      name: '@deepseek-ai/dsh-tool-subagent-control'
+      disabled: false
+
+    - id: subagent
+      name: '@deepseek-ai/dsh-tool-subagent'
+      disabled: false
+      config:
+        provider: spawn
+        toolName: subagent
+        backgroundMode: continuable
+        maxDepth: 1
+
+# ── ask / todo ──────────────────────────────────────────────────────────────
+
+- id: tool-ask-user
+  name: '@deepseek-ai/dsh-tool-ask-user'
+
+- id: tool-todo
+  name: '@deepseek-ai/dsh-tool-todo'
+  config:
+    allowParallelInProgress: true
+
+# ── web ─────────────────────────────────────────────────────────────────────
+
+# 查 vanilla 用法优先读本地游戏目录；web 工具保留但用的时候要记住：
+# paradoxwikis / paradoxplaza / reddit / wikipedia 在本机不可达，
+# 直接用 GitHub API 或本地文件更可靠。
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'
+  config:
+    # fetch = 允许抓取网页正文（不只是搜索摘要）。查 EU4 语法时偶尔需要读一整页。
+    fetch: true
+    # 60s：GitHub API / 本地 wiki 镜像都够用；默认值偏短时大文件会超时。
+    searchTimeoutMs: 60000

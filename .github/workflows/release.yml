@@ -1,0 +1,112 @@
+name: Release
+
+# 打 tag（v*）时：跑测试 → 打包 → 发 npm（OIDC 可信发布）→ 建 GitHub Release
+#
+# ★ 为什么用 OIDC（Trusted Publishing）而不是 NPM_TOKEN
+# ------------------------------------------------------
+# 实测记录（2026-11-01，npm 11.19.1 / 账号 alice214 / 2FA 模式 auth-and-writes）：
+#   1. 邮件 OTP 能创建 token，但**不能用于 publish**（403 要求 TOTP 或 bypass-2FA token）
+#   2. bypass-2FA 的 granular token 无法预授权一个尚不存在的新包
+#      （401 You do not have access to the requested package(s)）
+#   3. 改成 scoped 包 @alice214/dsh-eu4-modding 后 publish 仍 404（scope 授权未生效）
+#   4. 再用该 token 创建新 token 被直接拒：
+#      403 Granular access tokens that bypass two-factor authentication may not perform this action
+#      —— 那条黄条警告（bypass 2FA token 将被限制）已经生效，不是 2027 年
+#   5. 用户无法绑定 TOTP（扫码时反复落到 Windows passkey 流程，卡在「正在连接设备」）
+#
+# 结论：本机 CLI 发布这条路在 2FA 状态下已不可行。
+# OIDC 由 GitHub 签发的短期凭据完成认证，**完全绕开密码、OTP、token**。
+#
+# 一次性配置（在 npm 网页上做，不是在这里）：
+#   https://www.npmjs.com/package/dsh-eu4-modding/access
+#   → Trusted Publisher → GitHub Actions
+#      Organization/user : <你的 GitHub 用户名>
+#      Repository        : dsh-eu4-modding
+#      Workflow filename : release.yml
+#      Environment       : （留空）
+#
+# 之后每次打 tag 自动发布，永远不用管 2FA。
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '只打包，不发布到 npm'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write     # 建 GitHub Release
+  id-token: write     # ★ OIDC 必需：让 npm 能验证这次运行的来源
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # ---- 发布前必须全绿（与本地 tools/publish.py 的检查项对应）----
+      - name: Test before release
+        run: |
+          python -m compileall -q skills/eu4-modding/scripts tests
+          python -m unittest discover -s tests -p "test_*.py" -v
+          node --test tests/smoke.test.mjs tests/preset.test.mjs tests/preset-required.test.mjs
+
+      - name: Guards must pass (and prove they can fail)
+        run: |
+          python tools/check_no_assets.py --selftest
+          python tools/check_no_assets.py
+          python tools/check_no_reference.py --selftest
+          python tools/check_no_reference.py
+          python tools/check_doc_links.py --selftest
+          python tools/check_doc_links.py
+
+      - name: Verify package excludes reference/ and assets
+        run: |
+          node -e "
+          const pkg = require('./package.json');
+          const bad = (pkg.files||[]).filter(f => f === 'reference' || f.startsWith('reference/'));
+          if (bad.length) { console.error('reference/ 不得进包'); process.exit(1); }
+          if (pkg.private) { console.error('private:true 会阻止发布'); process.exit(1); }
+          "
+
+      - name: Pack tarball
+        run: npm pack
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-tarball
+          path: '*.tgz'
+
+      # ---- 发布到 npm（OIDC 可信发布）----
+      # `--provenance` 会让 npm 生成来源证明（attestation），
+      # 页面上显示「Built and signed on GitHub Actions」。
+      # 注意：npm 11 起该包已内置，不需要额外安装 npm CLI。
+      - name: Publish to npm (trusted publishing)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: npm publish --provenance --access public
+        env:
+          # ★ 不要在这里放 NODE_AUTH_TOKEN。
+          #   OIDC 模式下 npm 自己从 ACTIONS_ID_TOKEN_REQUEST_* 换短期凭据；
+          #   一旦设了 token，npm 会优先用它，反而失去 OIDC 的意义。
+          NPM_CONFIG_PROVENANCE: 'true'
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: '*.tgz'
+          generate_release_notes: true

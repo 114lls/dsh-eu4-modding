@@ -1,1 +1,25 @@
-# bootstrap
+# 构建产物与本地生成物（不进仓库、不进包）
+reference/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+node_modules/
+dist/
+coverage/
+
+# 备份目录（backup.py 生成在 mod 同级）
+_eu4_mod_backups/
+
+# 临时调试脚本（项目根不该留）
+tmp_*.py
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# 日志与本地产物
+*.log
+!tests/fixtures/*.log

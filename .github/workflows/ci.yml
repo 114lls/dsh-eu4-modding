@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python:
+    name: Python (${{ matrix.os }} / py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Syntax check all scripts
+        run: python -m compileall -q skills/eu4-modding/scripts tests tools
+
+      - name: Unit tests
+        # 无游戏目录 / 无 cwt 配置时相关用例自动 skip，不算失败
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+  node:
+    name: Node smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Smoke tests
+        run: node --test tests/smoke.test.mjs
+
+  guards:
+    name: Release guards (must be reversible)
+    runs-on: ubuntu-latest
+    needs: [node]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 守卫类检查的通病：写错了不报错，只在最需要它的时候不生效。
+      # 所以每条守卫都先跑 --selftest（反向验证），通过了才算守卫可信。
+      - name: Guard self-test - no game assets
+        run: python tools/check_no_assets.py --selftest
+
+      - name: Guard self-test - reference not packaged
+        run: python tools/check_no_reference.py --selftest
+
+      - name: Guard - no game assets in tracked files
+        run: python tools/check_no_assets.py
+
+      - name: Guard - reference/ absent from files whitelist
+        run: python tools/check_no_reference.py
+
+      - name: Guard - reference/ absent from actual npm tarball
+        run: |
+          python tools/check_no_reference.py --npm
+
+  docs:
+    name: Docs integrity (no dead links)
+    runs-on: ubuntu-latest
+    needs: [node]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # SKILL.md §3 的配方索引整张表指向 cheatsheet.md 的 §N。
+      # 缺章会让索引变成死链 —— 看起来完整、实际断裂。
+      # 这条把它从人工审查变成可测项。
+      - name: Recipe index has no dead links
+        run: python tools/check_doc_links.py
