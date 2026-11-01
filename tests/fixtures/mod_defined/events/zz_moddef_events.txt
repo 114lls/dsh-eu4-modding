@@ -1,0 +1,27 @@
+namespace = zz_moddef
+
+# L4-b 回归样本：mod 自己定义的 scripted_effect / scripted_trigger
+# 它们在白名单里查不到，但在 mod 内完全合法 → 不得报 warn/error。
+# 本文件不含任何游戏素材。
+
+country_event = {
+	id = zz_moddef.1
+	title = "zz_moddef.1.t"
+	desc = "zz_moddef.1.d"
+	is_triggered_only = yes
+
+	trigger = {
+		# 自定义 scripted_trigger
+		zz_my_custom_trigger = yes
+	}
+
+	immediate = {
+		# 自定义 scripted_effect
+		zz_my_custom_effect = yes
+	}
+
+	option = {
+		name = "zz_moddef.1.a"
+		add_prestige = 1
+	}
+}

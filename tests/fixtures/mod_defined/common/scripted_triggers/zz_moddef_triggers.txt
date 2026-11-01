@@ -1,0 +1,4 @@
+# scripted_trigger 定义（与 scripted_effects 分开目录，lint 需要分别收集）
+zz_my_custom_trigger = {
+	always = yes
+}

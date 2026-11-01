@@ -1,0 +1,29 @@
+namespace = zz_tex
+
+# 纹理路径检查样本
+# ① picture 指向不存在的文件 → warn（texture-path）
+# ② icon 用了未在本 mod 定义的 sprite → info（sprite-ref）
+# 本文件不含任何游戏素材。
+
+country_event = {
+	id = zz_tex.1
+	title = "zz_tex.1.t"
+	desc = "zz_tex.1.d"
+	is_triggered_only = yes
+	picture = "zz_missing_picture.png"
+
+	option = {
+		name = "zz_tex.1.a"
+	}
+}
+
+zz_tex_decisions = {
+	zz_tex_decision = {
+		potential = { always = yes }
+		allow = { always = yes }
+		effect = {
+			add_prestige = 1
+		}
+		icon = zz_undefined_sprite
+	}
+}

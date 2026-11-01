@@ -1,0 +1,11 @@
+# mod 自定义的 scripted_effect / scripted_trigger 定义
+# lint 必须先收集本 mod 的定义，否则会把调用处报成「白名单查不到」—— 假错。
+# 本文件不含任何游戏素材。
+
+zz_my_custom_effect = {
+	add_prestige = 2
+}
+
+zz_my_custom_trigger = {
+	always = yes
+}

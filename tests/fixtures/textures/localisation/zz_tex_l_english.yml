@@ -1,0 +1,6 @@
+l_english:
+ zz_tex.1.t:0 "纹理路径测试"
+ zz_tex.1.d:0 "验证 picture 缺失与 sprite 未定义的检查。"
+ zz_tex.1.a:0 "确认"
+ zz_tex_decision:0 "纹理测试决议"
+ zz_tex_decision_desc:0 "测试用。"

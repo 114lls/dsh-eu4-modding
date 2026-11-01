@@ -1,0 +1,25 @@
+namespace = zz_spell
+
+# 拼写错样本：用于验证 --json 的 did_you_mean 与 usability_hint
+# 本文件不含任何游戏素材。
+
+country_event = {
+	id = zz_spell.1
+	title = "zz_spell.1.t"
+	desc = "zz_spell.1.d"
+	is_triggered_only = yes
+
+	trigger = {
+		# 拼错的触发器名：treasry → treasury
+		treasry = 100
+	}
+
+	immediate = {
+		# 拼错的效果名：add_prestge → add_prestige
+		add_prestge = 5
+	}
+
+	option = {
+		name = "zz_spell.1.a"
+	}
+}

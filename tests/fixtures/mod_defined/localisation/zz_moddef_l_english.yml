@@ -1,0 +1,4 @@
+﻿l_english:
+ zz_moddef.1.t:0 "自定义脚本效果测试"
+ zz_moddef.1.d:0 "验证 mod 自己定义的名字不被报假错。"
+ zz_moddef.1.a:0 "确认"
