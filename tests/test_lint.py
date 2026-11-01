@@ -134,6 +134,13 @@ class TestModDefinedNamesNotWarned(unittest.TestCase):
         self.assertEqual(bad, [], f"自定义 scripted_trigger 被报了：{bad}")
 
     def test_names_stats_reflect_mod_definitions(self):
+        # ★ 无 reference/ 时 names 整类不执行（lint 返回 INCOMPLETE / exit 2），
+        #   统计字段自然为 0 —— 这不是收集逻辑失效，是前提不成立。
+        #   依据：CI 实测（2026-11-01，ubuntu/windows × py3.10/3.12）该用例在
+        #   无 reference 的环境里红，报「mod_defined_effects 计数为 0」。
+        if not _has_ref():
+            raise unittest.SkipTest(
+                "[NEED-REF] 缺 reference/，names 统计不执行（先跑 build_reference.py）")
         self.assertGreater(self.res.stats.get("mod_defined_effects", 0), 0,
                            "mod_defined_effects 计数为 0，说明收集逻辑没生效")
 
